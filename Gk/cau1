@@ -1,0 +1,18 @@
+<?php
+$name = "Nguyen Thai Duong";
+$score = rand(0, 10);
+
+if ($score >= 8) {
+    $rank = "Giỏi";
+} elseif ($score >= 6.5) {
+    $rank = "Khá";
+} elseif ($score >= 5) {
+    $rank = "Trung bình";
+} else {
+    $rank = "Yếu";
+}
+
+echo "Họ và tên: " . $name . "<br>";
+echo "Điểm số: " . $score . "<br>";
+echo "Xếp loại: " . $rank;
+?>
