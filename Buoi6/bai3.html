@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quản lý công việc cá nhân</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      max-width: 640px;
+      margin: 40px auto;
+      padding: 0 16px;
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+    }
+
+    .app {
+      padding: 24px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px #0002;
+    }
+
+    form, .filters, .task {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 8px;
+    }
+
+    button, select {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .filters {
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .task-list {
+      padding: 0;
+      list-style: none;
+    }
+
+    .task {
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .task-name {
+      flex: 1;
+    }
+
+    .completed {
+      color: #777;
+      text-decoration: line-through;
+    }
+
+    .empty {
+      color: #666;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app">
+    <h1>Quản lý công việc</h1>
+
+    <form @submit.prevent="addTask">
+      <input
+        type="text"
+        v-model.trim="newTaskName"
+        placeholder="Nhập công việc cần làm"
+        aria-label="Tên công việc mới"
+      >
+      <button type="submit">Thêm</button>
+    </form>
+
+    <p>
+      Tổng số việc: {{ totalTasks }} |
+      Chưa hoàn thành: {{ unfinishedTasks }}
+    </p>
+
+    <div class="filters">
+      <label for="task-filter">Lọc:</label>
+      <select id="task-filter" v-model="filter">
+        <option value="all">Tất cả</option>
+        <option value="unfinished">Chưa hoàn thành</option>
+        <option value="completed">Đã hoàn thành</option>
+      </select>
+
+      <button
+        type="button"
+        @click="clearCompleted"
+        :disabled="unfinishedTasks === totalTasks"
+      >
+        Xóa các việc đã hoàn thành
+      </button>
+    </div>
+
+    <p v-if="tasks.length === 0" class="empty">
+      Chưa có công việc nào. Hãy nhập việc cần làm ở phía trên.
+    </p>
+    <p v-else-if="visibleTasks.length === 0" class="empty">
+      Không có công việc nào phù hợp với bộ lọc này.
+    </p>
+
+    <ul v-else class="task-list">
+      <li v-for="task in visibleTasks" :key="task.id" class="task">
+        <input
+          type="checkbox"
+          v-model="task.done"
+          :aria-label="'Đánh dấu hoàn thành: ' + task.name"
+        >
+        <span class="task-name" :class="{ completed: task.done }">
+          {{ task.name }}
+        </span>
+        <button type="button" @click="removeTask(task.id)">Xóa</button>
+      </li>
+    </ul>
+  </div>
+
+  <script>
+    Vue.createApp({
+      data() {
+        return {
+          newTaskName: '',
+          filter: 'all',
+          nextTaskId: 4,
+          tasks: [
+            { id: 1, name: 'Đọc bài Vue.js', done: false },
+            { id: 2, name: 'Làm bài tập', done: false },
+            { id: 3, name: 'Ôn lại bài cũ', done: true }
+          ]
+        };
+      },
+
+      computed: {
+        visibleTasks() {
+          if (this.filter === 'unfinished') {
+            return this.tasks.filter(task => !task.done);
+          }
+          if (this.filter === 'completed') {
+            return this.tasks.filter(task => task.done);
+          }
+          return this.tasks;
+        },
+
+        totalTasks() {
+          return this.tasks.length;
+        },
+
+        unfinishedTasks() {
+          return this.tasks.filter(task => !task.done).length;
+        }
+      },
+
+      methods: {
+        addTask() {
+          if (!this.newTaskName) return;
+
+          this.tasks.push({
+            id: this.nextTaskId++,
+            name: this.newTaskName,
+            done: false
+          });
+          this.newTaskName = '';
+        },
+
+        removeTask(taskId) {
+          this.tasks = this.tasks.filter(task => task.id !== taskId);
+        },
+
+        clearCompleted() {
+          this.tasks = this.tasks.filter(task => !task.done);
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

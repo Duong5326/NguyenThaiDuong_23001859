@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thông tin sinh viên</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      padding: 30px;
+    }
+
+    .card {
+      max-width: 420px;
+      margin: auto;
+      padding: 24px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px #0002;
+    }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .grade {
+      font-weight: bold;
+    }
+
+    .gioi { color: green; }
+    .kha { color: blue; }
+    .trung-binh { color: orange; }
+    .chua-dat { color: red; }
+
+    button {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <main class="card">
+      <img
+        class="avatar"
+        :src="student.avatar"
+        :alt="'Ảnh đại diện của ' + student.name"
+      >
+
+      <h1>{{ student.name }}</h1>
+
+      <p>Mã sinh viên: {{ student.id }}</p>
+      <p>Lớp: <span v-text="student.className"></span></p>
+      <p>Điểm trung bình: {{ student.average }}</p>
+
+      <p>
+        Xếp loại:
+        <span class="grade" :class="gradeInfo.className">
+          {{ gradeInfo.text }}
+        </span>
+      </p>
+
+      <p v-if="student.isStudying">Trạng thái: Đang học</p>
+      <p v-else>Trạng thái: Đã nghỉ</p>
+
+      <button @click="showIntro = !showIntro">
+        {{ showIntro ? 'Ẩn giới thiệu' : 'Hiện giới thiệu' }}
+      </button>
+
+      <p v-show="showIntro">
+        {{ student.name }} hiện đang học lớp {{ student.className }}.
+      </p>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script>
+    Vue.createApp({
+      data() {
+        return {
+          student: {
+            id: '23001859',
+            name: 'Nguyễn Thái Dương',
+            className: 'MAT3542 1',
+            avatar: 'https://placehold.co/160x160?text=Avatar',
+            average: 8.5,
+            isStudying: true
+          },
+          showIntro: true
+        };
+      },
+
+      computed: {
+        gradeInfo() {
+            const average = this.student.average;
+
+            if (average >= 8) return { text: 'Giỏi', className: 'gioi' };
+            if (average >= 6.5) return { text: 'Khá', className: 'kha' };
+            if (average >= 5) return { text: 'Trung bình', className: 'trung-binh' };
+            return { text: 'Chưa đạt', className: 'chua-dat' };
+        }
+      },
+    }).mount('#app');
+  </script>
+</body>
+</html>

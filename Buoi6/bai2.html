@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đặt vé xem phim</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+  <div id="app">
+    <h1>Đặt vé xem phim</h1>
+
+    <form @submit.prevent="placeOrder">
+      <p>
+        <label>
+          Họ tên:
+          <input v-model.trim="customerName">
+        </label>
+      </p>
+
+      <p>
+        <label>
+          Suất chiếu:
+          <select v-model="showtime">
+            <option>09:00</option>
+            <option>14:00</option>
+            <option>19:00</option>
+          </select>
+        </label>
+      </p>
+
+      <p>Loại vé:</p>
+      <label>
+        <input type="radio" value="normal" v-model="ticketType">
+        Vé thường — 70.000đ
+      </label>
+      <br>
+      <label>
+        <input type="radio" value="vip" v-model="ticketType">
+        Vé VIP — 100.000đ
+      </label>
+
+      <p>
+        <label>
+          Số lượng:
+          <input type="number" v-model.number="quantity" min="1" max="10">
+        </label>
+        <button type="button" @click="decreaseQuantity">--</button>
+        <button type="button" @click="increaseQuantity">+</button>
+      </p>
+
+      <p>
+        <label>
+          <input type="checkbox" v-model="hasCombo">
+          Combo bắp nước — 45.000đ
+        </label>
+      </p>
+
+      <p v-if="quantityIsValid">
+        Tổng tiền: <strong>{{ total.toLocaleString('vi-VN') }}đ</strong>
+      </p>
+      <p v-else>Số lượng vé phải là số nguyên từ 1 đến 10.</p>
+
+      <button type="submit" :disabled="!canSubmit">Đặt vé</button>
+      <button type="button" @click="resetForm">Đặt lại</button>
+    </form>
+
+    <section v-if="confirmation">
+      <h2>Thông tin xác nhận</h2>
+      <p>Khách hàng: {{ confirmation.name }}</p>
+      <p>Suất chiếu: {{ confirmation.showtime }}</p>
+      <p>Loại vé: {{ confirmation.ticketType }}</p>
+      <p>Số lượng: {{ confirmation.quantity }}</p>
+      <p>Combo: {{ confirmation.hasCombo ? 'Có' : 'Không' }}</p>
+      <p>Tổng tiền: {{ confirmation.total.toLocaleString('vi-VN') }}đ</p>
+    </section>
+  </div>
+
+  <script>
+    Vue.createApp({
+      data() {
+        return {
+          customerName: '',
+          showtime: '09:00',
+          ticketType: 'normal',
+          quantity: 1,
+          hasCombo: false,
+          confirmation: null
+        };
+      },
+
+      computed: {
+        ticketPrice() {
+          return this.ticketType === 'vip' ? 100000 : 70000;
+        },
+
+        quantityIsValid() {
+          return Number.isInteger(this.quantity)
+            && this.quantity >= 1
+            && this.quantity <= 10;
+        },
+
+        total() {
+          return this.ticketPrice * this.quantity
+            + (this.hasCombo ? 45000 : 0);
+        },
+
+        canSubmit() {
+          return this.customerName.length > 0 && this.quantityIsValid;
+        }
+      },
+
+      methods: {
+        increaseQuantity() {
+          if (this.quantity < 10) this.quantity++;
+        },
+
+        decreaseQuantity() {
+          if (this.quantity > 1) this.quantity--;
+        },
+
+        placeOrder() {
+          this.confirmation = {
+            name: this.customerName,
+            showtime: this.showtime,
+            ticketType: this.ticketType === 'vip' ? 'VIP' : 'Thường',
+            quantity: this.quantity,
+            hasCombo: this.hasCombo,
+            total: this.total
+          };
+        },
+
+        resetForm() {
+          this.customerName = '';
+          this.showtime = '09:00';
+          this.ticketType = 'normal';
+          this.quantity = 1;
+          this.hasCombo = false;
+          this.confirmation = null;
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
