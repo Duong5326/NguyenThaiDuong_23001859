@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bài 3 · Giỏ hàng</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 18px;
+      background: #f3f6fb;
+      color: #172033;
+      font-family: Arial, sans-serif;
+    }
+    .app { max-width: 850px; margin: auto; }
+    .back { color: #2457bd; text-decoration: none; }
+    .panel {
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid #e0e6f0;
+      border-radius: 14px;
+      background: white;
+      box-shadow: 0 5px 18px #1720330b;
+    }
+    .cart-row {
+      display: grid;
+      grid-template-columns: minmax(140px, 1fr) auto auto auto;
+      align-items: center;
+      gap: 18px;
+      padding: 16px 0;
+      border-bottom: 1px solid #e8ecf3;
+    }
+    .item-name { margin: 0 0 6px; }
+    .muted { color: #657187; }
+    .quantity { display: flex; align-items: center; gap: 10px; }
+    button {
+      min-width: 38px;
+      min-height: 38px;
+      padding: 7px 10px;
+      border: 0;
+      border-radius: 8px;
+      background: #eff4ff;
+      color: #2457bd;
+      font: inherit;
+      cursor: pointer;
+    }
+    button:disabled { cursor: not-allowed; opacity: .45; }
+    .remove { background: #ffeded; color: #b42323; }
+    .totals { display: flex; justify-content: space-between; gap: 12px; padding-top: 16px; }
+    .total-price { color: #2457bd; font-size: 22px; }
+    .empty { padding: 26px 0; color: #657187; text-align: center; }
+    @media (max-width: 600px) {
+      body { padding: 22px 12px; }
+      .panel { padding: 16px; }
+      .cart-row { grid-template-columns: 1fr auto; gap: 10px; }
+      .quantity { grid-column: 1; grid-row: 2; }
+      .line-total { grid-column: 2; grid-row: 2; }
+      .remove { grid-column: 2; grid-row: 1; justify-self: end; }
+      .totals { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main id="app" class="app">
+    <a class="back" href="index.html">← Danh sách bài tập</a>
+    <h1>Giỏ hàng</h1>
+    <section class="panel" aria-label="Nội dung giỏ hàng">
+      <p v-if="cart.length === 0" class="empty">Giỏ hàng trống</p>
+      <template v-else>
+        <dong-gio-hang
+          v-for="item in cart"
+          :key="item.id"
+          :id="item.id"
+          :ten="item.name"
+          :don-gia="item.price"
+          :so-luong="item.quantity"
+          @doi-so-luong="updateQuantity"
+          @yeu-cau-xoa="removeItem"
+        ></dong-gio-hang>
+        <div class="totals">
+          <strong>Tổng số lượng: {{ totalQuantity }}</strong>
+          <strong class="total-price">Tổng tiền: {{ formatCurrency(totalPrice) }}</strong>
+        </div>
+      </template>
+    </section>
+    <p v-if="message" role="status">{{ message }}</p>
+  </main>
+
+  <script>
+    const DongGioHang = {
+      props: {
+        id: { type: Number, required: true },
+        ten: { type: String, required: true },
+        donGia: { type: Number, required: true },
+        soLuong: { type: Number, required: true }
+      },
+
+      emits: ['doi-so-luong', 'yeu-cau-xoa'],
+
+      computed: {
+        thanhTien() {
+          return this.donGia * this.soLuong;
+        }
+      },
+
+      methods: {
+        formatCurrency(value) {
+          return `${value.toLocaleString('vi-VN')} đ`;
+        },
+
+        changeQuantity(amount) {
+          const newQuantity = this.soLuong + amount;
+          if (!Number.isInteger(newQuantity) || newQuantity < 1 || newQuantity > 99) return;
+          this.$emit('doi-so-luong', this.id, newQuantity);
+        }
+      },
+
+      template: `
+        <article class="cart-row">
+          <div>
+            <h2 class="item-name">{{ ten }}</h2>
+            <span class="muted">{{ formatCurrency(donGia) }} / sản phẩm</span>
+          </div>
+          <div class="quantity" :aria-label="'Số lượng ' + ten">
+            <button
+              type="button"
+              :aria-label="'Giảm số lượng ' + ten"
+              :disabled="soLuong <= 1"
+              @click="changeQuantity(-1)"
+            >−</button>
+            <strong>{{ soLuong }}</strong>
+            <button
+              type="button"
+              :aria-label="'Tăng số lượng ' + ten"
+              :disabled="soLuong >= 99"
+              @click="changeQuantity(1)"
+            >+</button>
+          </div>
+          <strong class="line-total">{{ formatCurrency(thanhTien) }}</strong>
+          <button
+            type="button"
+            class="remove"
+            :aria-label="'Xóa ' + ten + ' khỏi giỏ'"
+            @click="$emit('yeu-cau-xoa', id)"
+          >Xóa</button>
+        </article>
+      `
+    };
+
+    Vue.createApp({
+      components: { DongGioHang },
+
+      data() {
+        return {
+          message: '',
+          cart: [
+            { id: 1, name: 'Bút bi', price: 5000, quantity: 2 },
+            { id: 2, name: 'Quyển vở', price: 12000, quantity: 3 }
+          ]
+        };
+      },
+
+      computed: {
+        totalQuantity() {
+          return this.cart.reduce((total, item) => total + item.quantity, 0);
+        },
+
+        totalPrice() {
+          return this.cart.reduce((total, item) => total + item.price * item.quantity, 0);
+        }
+      },
+
+      methods: {
+        formatCurrency(value) {
+          return `${value.toLocaleString('vi-VN')} đ`;
+        },
+
+        updateQuantity(id, newQuantity) {
+          if (!Number.isInteger(id) || !Number.isInteger(newQuantity)
+            || newQuantity < 1 || newQuantity > 99) {
+            this.message = 'Không thể cập nhật: số lượng phải là số nguyên từ 1 đến 99.';
+            return;
+          }
+
+          const item = this.cart.find(product => product.id === id);
+          if (!item) {
+            this.message = 'Không tìm thấy sản phẩm cần cập nhật trong giỏ hàng.';
+            return;
+          }
+
+          item.quantity = newQuantity;
+          this.message = '';
+        },
+
+        removeItem(id) {
+          const exists = this.cart.some(item => item.id === id);
+          if (!exists) {
+            this.message = 'Không tìm thấy sản phẩm cần xóa trong giỏ hàng.';
+            return;
+          }
+
+          this.cart = this.cart.filter(item => item.id !== id);
+          this.message = '';
+        }
+      }
+    })
+      .component('dong-gio-hang', DongGioHang)
+      .mount('#app');
+  </script>
+</body>
+</html>
