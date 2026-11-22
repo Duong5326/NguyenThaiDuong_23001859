@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản lý sản phẩm</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 24px; }
+    .container { max-width: 980px; margin: 0 auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+    h2 { margin-top: 0; }
+    form { display: grid; grid-template-columns: repeat(3, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+    .file-field { display: flex; flex-direction: column; gap: 8px; }
+    .preview { width: 100px; height: 100px; object-fit: cover; border: 1px solid #ddd; border-radius: 8px; }
+    .btn-group { display: flex; gap: 8px; align-items: end; }
+    button { padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; color: white; background: #007bff; }
+    button.secondary { background: #6c757d; }
+    button.danger { background: #dc3545; }
+    button:disabled { background: #adb5bd; cursor: not-allowed; }
+    .error { color: red; margin-bottom: 12px; min-height: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f1f1f1; }
+    .thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; }
+    .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+    .empty { text-align: center; color: #666; }
+    @media (max-width: 700px) {
+      form { grid-template-columns: 1fr; }
+      .pagination { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container">
+    <h2>Quản lý sản phẩm</h2>
+
+    <form @submit.prevent="saveProduct">
+      <input v-model="form.name" type="text" placeholder="Tên sản phẩm" />
+      <input v-model="form.price" type="number" min="1" placeholder="Đơn giá" />
+      <div class="btn-group">
+        <input v-model="form.stock" type="number" min="0" placeholder="Số lượng tồn" />
+        <button type="submit">{{ isEdit ? 'Lưu' : 'Thêm' }}</button>
+        <button type="button" class="secondary" v-if="isEdit" @click="resetForm">Hủy</button>
+      </div>
+      <div class="file-field">
+        <label for="image">Ảnh sản phẩm (JPG, JPEG, PNG; tối đa 2 MB)</label>
+        <input id="image" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" @change="handleImageChange" />
+        <img v-if="previewUrl" :src="previewUrl" class="preview" alt="Xem trước ảnh" />
+      </div>
+    </form>
+
+    <div class="error">{{ errorMessage }}</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tên sản phẩm</th>
+          <th>Đơn giá</th>
+          <th>Số lượng tồn</th>
+          <th>Ảnh</th>
+          <th>Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="product in products" :key="product.id">
+          <td>{{ product.id }}</td>
+          <td>{{ product.name }}</td>
+          <td>{{ product.price }}</td>
+          <td>{{ product.stock }}</td>
+          <td>
+            <img v-if="product.image" :src="product.image" class="thumb" :alt="product.name" />
+            <span v-else>Chưa có ảnh</span>
+          </td>
+          <td>
+            <button @click="editProduct(product)">Sửa</button>
+            <button class="danger" @click="deleteProduct(product.id)">Xóa</button>
+          </td>
+        </tr>
+        <tr v-if="products.length === 0">
+          <td colspan="6" class="empty">Chưa có sản phẩm</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pagination">
+      <button :disabled="pagination.page <= 1" @click="changePage(pagination.page - 1)">Trước</button>
+      <span>Trang {{ pagination.page }} / {{ pagination.total_pages }} — Tổng {{ pagination.total }} sản phẩm</span>
+      <button :disabled="pagination.page >= pagination.total_pages" @click="changePage(pagination.page + 1)">Sau</button>
+    </div>
+  </div>
+
+  <script src="Vue.js"></script>
+</body>
+</html>
